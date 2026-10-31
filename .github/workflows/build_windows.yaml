@@ -1,0 +1,43 @@
+name: Build Windows AMD64
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - "README.md"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build windows/amd64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build
+        run: TARGET_OS=windows TARGET_ARCH=amd64 make cloudflared
+        env:
+          CGO_ENABLED: "0"
+
+      - name: Prepare artifact
+        run: mv cloudflared.exe cloudflared-windows-amd64.exe
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloudflared-windows-amd64
+          path: cloudflared-windows-amd64.exe
+          if-no-files-found: error
